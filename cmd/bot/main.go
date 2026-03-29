@@ -16,15 +16,23 @@ import (
 
 	"freaky_md/internal/bot"
 	_ "freaky_md/internal/commands"
+	"freaky_md/internal/config"
 )
 
 func main() {
-	dbLog := waLog.Stdout("Database", "INFO", true)
-	clientLog := waLog.Stdout("Client", "INFO", true)
+	cfg := config.Load("config.yaml")
+
+	logLevel := "INFO"
+	if cfg.Debug {
+		logLevel = "DEBUG"
+	}
+	dbLog := waLog.Stdout("Database", logLevel, true)
+	clientLog := waLog.Stdout("Client", logLevel, true)
 
 	ctx := context.Background()
 
-	container, err := sqlstore.New(ctx, "sqlite3", "file:freaky.db?_foreign_keys=on", dbLog)
+	dbPath := fmt.Sprintf("file:%s?_foreign_keys=on", cfg.SessionPath)
+	container, err := sqlstore.New(ctx, "sqlite3", dbPath, dbLog)
 	if err != nil {
 		clientLog.Errorf("Critical: Failed to connect to database: %v", err)
 		os.Exit(1)
@@ -37,7 +45,7 @@ func main() {
 	}
 
 	client := whatsmeow.NewClient(deviceStore, clientLog)
-	client.AddEventHandler(bot.Handler(client))
+	client.AddEventHandler(bot.Handler(client, cfg))
 
 	if client.Store.ID == nil {
 		qrChan, _ := client.GetQRChannel(context.Background())
@@ -85,4 +93,3 @@ func main() {
 	time.Sleep(1 * time.Second)
 	clientLog.Infof("Exited safely.")
 }
-

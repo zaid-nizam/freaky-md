@@ -18,7 +18,7 @@ func init() {
 
 func handlePing(ctx *CommandContext) {
 	latency := time.Since(ctx.Event.Info.Timestamp)
-	res := fmt.Sprintf("🏓 *Pong!*\n_Latency: %dms_", latency.Milliseconds())
+	res := fmt.Sprintf("🏓 *Pong!*\n_Latency: %dms_\n> %s", latency.Milliseconds(), ctx.Config.BotName)
 
 	_, err := ctx.Client.SendMessage(ctx.Context, ctx.Event.Info.Chat, &waE2E.Message{
 		Conversation: &res,
@@ -28,4 +28,3 @@ func handlePing(ctx *CommandContext) {
 		fmt.Printf("Ping error: %v\n", err)
 	}
 }
-

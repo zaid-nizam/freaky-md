@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"freaky_md/internal/config"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types/events"
@@ -12,6 +13,7 @@ type CommandContext struct {
 	Client  *whatsmeow.Client
 	Event   *events.Message
 	Args    []string
+	Config  *config.Config
 }
 
 type Command struct {

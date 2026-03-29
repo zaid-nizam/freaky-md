@@ -5,22 +5,35 @@ import (
 	"strings"
 
 	"freaky_md/internal/commands"
+	"freaky_md/internal/config"
+
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 )
 
-func Handler(client *whatsmeow.Client) func(interface{}) {
+func Handler(client *whatsmeow.Client, cfg *config.Config) func(interface{}) {
 	return func(evt interface{}) {
 		switch v := evt.(type) {
 		case *events.Message:
-			handleMessage(client, v)
+			handleMessage(client, v, cfg)
 		}
 	}
 }
 
-func handleMessage(client *whatsmeow.Client, evt *events.Message) {
+func handleMessage(client *whatsmeow.Client, evt *events.Message, cfg *config.Config) {
 	if evt.Info.IsFromMe || evt.Message == nil {
 		return
+	}
+
+	if cfg.AutoRead {
+		client.MarkRead(
+			context.Background(),
+			[]types.MessageID{evt.Info.ID},
+			evt.Info.Timestamp,
+			evt.Info.Chat,
+			evt.Info.Sender,
+		)
 	}
 
 	var text string
@@ -30,11 +43,20 @@ func handleMessage(client *whatsmeow.Client, evt *events.Message) {
 		text = ext.GetText()
 	}
 
-	if !strings.HasPrefix(text, "!") {
+	var prefixUsed string
+	for _, p := range cfg.Prefixes {
+		if strings.HasPrefix(strings.ToLower(text), strings.ToLower(p)) {
+			prefixUsed = p
+			break
+		}
+	}
+
+	if prefixUsed == "" {
 		return
 	}
 
-	parts := strings.Fields(strings.TrimPrefix(text, "!"))
+	cleanText := strings.TrimPrefix(text, prefixUsed)
+	parts := strings.Fields(cleanText)
 	if len(parts) == 0 {
 		return
 	}
@@ -52,7 +74,9 @@ func handleMessage(client *whatsmeow.Client, evt *events.Message) {
 		Client:  client,
 		Event:   evt,
 		Args:    args,
+		Config:  cfg,
 	}
 
 	cmd.Execute(ctx)
 }
+

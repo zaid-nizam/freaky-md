@@ -1,0 +1,18 @@
+# FreakyMD Configuration
+bot_name: "FreakyMD"
+debug: false
+
+# Commands will trigger on any of these
+prefixes:
+  - "!"
+  - "."
+  - "freaky "
+
+# Full JIDs for people who can run admin commands
+owners:
+  - "1234567890@s.whatsapp.net"
+  - "447123456789@s.whatsapp.net"
+
+# Database & Behavior
+session_path: "./freaky.db"
+auto_read: true
